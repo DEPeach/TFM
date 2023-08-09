@@ -50,12 +50,12 @@ def mi(X,Y):
     
     H, egdes = np.histogramdd(np.stack((X2, Y2), axis=1), bins = arity_Y)
     p_XY = H/n
-    p_X_p_Y=np.dot(p_XY.sum(axis=1), p_XY.sum(axis=0))
+    p_X_p_Y=np.transpose(np.array([p_XY.sum(axis=1)]))@np.array([p_XY.sum(axis=0)])
 
-
-    #A=np.argwhere(p_XY)
-    #B=np.argwhere(p_X_p_Y)
-    #id_non_zero=np.where((A[:, None] == B).all(-1).any(1) == True)
+    arg_XY=np.argwhere(p_XY)
+    arg_X_Y=np.argwhere(p_X_p_Y)
+    mask = np.array([item in arg_X_Y for item in arg_XY])
+    id_non_zero=arg_XY[mask]
     #MI = sum(sum( p_XY(id_non_zero) .* log(p_XY(id_non_zero) ./  p_X_p_Y(id_non_zero))))
     
     ##return MI
