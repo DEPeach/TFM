@@ -1,9 +1,24 @@
-################################################
+##########################################################################################
 
-# Script TFM - UEM
+# R Script TFM - UEM
 
-#Alumno: Sandra Roldan 
-###############################################
+#Alumno: Sandra S. L. Roldán Pinzón
+#Tutor: Carlos Loucera
+
+# Implementación de un método basado en la entropía para la selección de variables 
+#en modelos de aprendizaje máquina multi-respuesta para el reposicionamiento de fármacos.
+
+#Raw data: 
+#         - GTEx V8
+#         - DrugBank Version 5.1.10
+
+#Descripcion: 
+#           - Normalizacion de los perfiles de GTEx utilizando egdeR
+#           - Calculo de los perfiles de actividad de señalización utilizando Hipathia
+#           - Filtracion de los targets de drogas conocidos de la base de datos de DRUGBANK 
+#             (Known Drug Targets, KDTs)
+
+##########################################################################################
 
 ############################
 ### INSTALACION PAQUETES ###
