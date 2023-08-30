@@ -35,8 +35,18 @@
 import numpy as np
 import pandas as pd
 import scipy as sp
+import math
+import random
 import sklearn 
 
+
+X_data = np.array([[2, 4, 4, 1],
+      [6, 0, 0, 0],
+      [6, 0, 0, 0]])
+
+Y_labels = np.array([[1, 4, 4, 0],
+      [5, 5, 5, 1],
+      [5, 5, 5, 1]])
 
 
 def Group_JMI_Rand(X_data,Y_labels, topK, distance):
@@ -48,8 +58,12 @@ def Group_JMI_Rand(X_data,Y_labels, topK, distance):
     # Create the cluster ensebmle, as a first approach I will generate the same
     # number of targets as the initial, numLabels
     for index_label in range(num_ensemble):
-        Y_labels_new(:,index_label) = kmedoids(Y_labels(:, datasample(1:num_labels,randi([ceil(num_labels/4) floor(3*num_labels/4)]),'Replace',false)),randi([4 16]), 'Distance', distance);
-    
+        
+        random1 = np.random.randint(math.ceil(num_labels/4),math.floor(3*num_labels/4)+1)
+        random2 = np.random.randint(4,16+1)
+        random_sample=random.sample([x for x in range(0, num_labels, 1)],random1)
+        
+        Y_labels_new = kmedoids(np.array([row[random_sample] for row in Y_labels]),random2, 'Distance', distance);
 
 
     score_per_feature = np.zeros(1,num_features)
