@@ -30,13 +30,13 @@ import pandas as pd
 import scipy as sp
 
 
-X = [[2, 4, 4, 1],
-      [6, 0, 0, 0],
-      [6, 0, 0, 0]]
+#X = [[2, 4, 4, 1],
+#      [6, 0, 0, 0],
+#      [6, 0, 0, 0]]
 
-Y = [[1, 4, 4, 0],
-      [5, 5, 5, 1],
-      [5, 5, 5, 1]]
+#Y = [[1, 4, 4, 0],
+#      [5, 5, 5, 1],
+#      [5, 5, 5, 1]]
 
 def mi(X,Y):
     C, ia, X1 = np.unique(X, return_index=True, return_inverse=True, axis=0)

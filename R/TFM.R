@@ -27,12 +27,13 @@
 if (!requireNamespace("BiocManager", quietly=TRUE)){install.packages("BiocManager")}
 if (!requireNamespace("edgeR", quietly=TRUE)){BiocManager::install("edgeR")}
 if (!requireNamespace("tidyverse", quietly=TRUE)){install.packages("tidyverse")}
+if (!requireNamespace("org.Hs.eg.db", quietly=TRUE)){BiocManager::install("org.Hs.eg.db")}
 BiocManager::install("hipathia")
-
 
 ###############################
 ### PREPARACION ENVIRONMENT ###
 ###############################
+
 
 library(edgeR)
 library(BiocManager)
@@ -44,9 +45,10 @@ library(hipathia)
 library(dplyr)
 
 
-################################################################
-####  Importacion de archivos y filtracion/cruzado de datos ####
-################################################################
+
+###################################################################################
+####  Importacion de archivos y filtracion/cruzado de la base de datos de GTEx ####
+###################################################################################
 
 #Matriz de datos de expresion:
 genexp <- read.delim(file="./Raw_Data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_reads.gct", skip=2)
@@ -86,9 +88,9 @@ y_norm1<- y_norm1[1:100,1:200]
 
 
 
-#################################
-### Actividad de señalización ###
-#################################
+#####################################################
+### Actividad de señalización utilizando hipathia ###
+#####################################################
 
 # https://bioconductor.statistik.tu-dortmund.de/packages/3.8/bioc/vignettes/hipathia/inst/doc/hipathia-vignette.pdf
 
@@ -116,6 +118,33 @@ norm_paths<-normalize_paths(path_vals, pathways)
 str(norm_paths)
 
 
+
+
+###############################
+## Importar data de Disgenet ##
+##############################
+
+#Anemia de Fanconi
+disgenet_AF<-read.delim("./Raw_Data/Disgenet_fanconi_anemia.tsv", header=TRUE, sep="\t",fill=TRUE)
+rownames(disgenet_AF)<- disgenet_AF$Gene
+#Seleccionamos los casos que nos interesan, score >= 0.70
+disgenet_AF<-disgenet_AF[disgenet_AF$Score_gda>=0.70, c("Disease", "Gene", "Gene_id", "UniProt", "Score_gda")]
+
+
+#Retinitis Pigmentosa
+disgenet_RP<-read.delim("./Raw_Data/Disgenet_retinitis_pigmentosa.tsv", header=TRUE, sep="\t",fill=TRUE)
+rownames(disgenet_RP)<- disgenet_RP$Gene
+#Seleccionamos los casos que nos interesan, score >= 0.70
+disgenet_RP<-disgenet_RP[disgenet_RP$Score_gda>=0.70, c("Disease", "Gene", "Gene_id", "UniProt", "Score_gda")]
+
+
+
+#BiocManager::install("pathview")
+#library("pathview")
+#pathview(gene.data=NULL, pathway.id="hsa04110")
+
+pht1_retinosois <- load_pathways(species = "hsa", pathways_list = c("hsa04960"))
+pht1_anemia <- load_pathways(species = "hsa", pathways_list = c("hsa03460"))
 
 
 #################################################################################################################
@@ -170,7 +199,6 @@ length(unique(drugbank_all2$uniprot_id)) ## 744 Uniprot IDs
 
 
 
-
 ## Load genes stable translator used to Unipro IDs
 entrez_uniprot <- read.delim(file = file.path(data_folder2, "genes_drugbank-v050108_mygene-20230120.tsv")) %>% .[.$uniprot_id %in% drugbank_app_action$uniprot_id , ]
 dim(entrez_uniprot)
@@ -187,6 +215,8 @@ write.xlsx(drugbank_app_action_genes, file =  file.path(tables_folder, "supp_tab
 
 alldrug_byaction <- drugbank_app_action_genes[,c("name", "actions", "entrez_id")]
 colnames(alldrug_byaction) <- c("drug", "drug_action", "KDT")  
+
+
 
 
 
