@@ -53,8 +53,6 @@ def Group_JMI_Rand(X_data,Y_labels, topK, distance):
     num_labels = Y_labels.shape[1]
     num_ensemble = num_labels
 
-    # Create the cluster ensebmle, as a first approach I will generate the same
-    # number of targets as the initial, numLabels
     for index_label in range(num_ensemble):
         
         random1 = np.random.randint(math.ceil(num_labels/4),math.floor(3*num_labels/4)+1)
@@ -86,18 +84,10 @@ def Group_JMI_Rand(X_data,Y_labels, topK, distance):
 
 
     val_max = score_per_feature[np.argmax(score_per_feature)]
-    
-    # Create a set of all feature indices from 1 to num_features
     all_features = set(range(1, num_features + 1))
-
-    # Create a set of selected feature indices
     selectedFeatures = {np.argmax(score_per_feature) + 1} 
-
-    # Calculate the set of not selected features using set difference
     not_selected_features = sorted(list(all_features - selectedFeatures))
 
-    #cfficient implementation of the second step, at this point I will store
-    # the score of each feature. Whenever I select a feature I put NaN score
     score_per_feature = np.zeros(1,num_features)
     score_per_feature[selectedFeatures[0] - 1] = np.nan
     count = 1
@@ -106,37 +96,22 @@ def Group_JMI_Rand(X_data,Y_labels, topK, distance):
         for index_feature_ns in len(not_selected_features):
             for index_label in range(num_ensemble): 
                    
-                # Create a combined feature matrix by stacking X_data from not_selected_features and the previously selected feature
                 combined_features = np.hstack((X_data[:, not_selected_features[index_feature_ns - 1]], X_data[:, selectedFeatures[count - 1] - 1]))
 
-                # Calculate the entropies of the combined features and Y_labels_new
                 h_X = entropy(combined_features)
                 h_Y = entropy(Y_labels_new[:, index_label])
 
-                # Calculate the score_per_feature for this combination and update the corresponding entry
                 score_per_feature[index_feature_ns - 1] += Mi.mi(combined_features,Y_labels_new[:, index_label]) / np.sqrt(h_X * h_Y)
                 
                 # Calculate mutual information between the combined features and Y_labels_new
                 #mi_XY = np.sum(np.log(np.histogram2d(combined_features, Y_labels_new[:, index_label])[0] + 1e-10))
                 #score_per_feature[index_feature_ns - 1] += mi_XY / np.sqrt(h_X * h_Y)
-                
-        
-        # Find the index of the maximum value in score_per_feature (excluding NaN values)
+                        
         valid_indices = np.where(~np.isnan(score_per_feature))[0]
-        if len(valid_indices) == 0:
-            break  # Exit the loop if all values are NaN
         selectedFeatureIndex = valid_indices[np.argmax(score_per_feature[valid_indices])]
-
-        # Get the maximum value itself
+        
         val_max = score_per_feature[selectedFeatureIndex]
-
-        # Set the value at the selected index to NaN
         score_per_feature[selectedFeatureIndex] = np.nan
-
-        # Add the selected feature to the list of selectedFeatures
         selectedFeatures.append(selectedFeatureIndex + 1)  
-
-        # Calculate the set of not selected features using set difference
         not_selected_features = list(set(range(1, num_features + 1)) - set(selectedFeatures))
-
         count += 1

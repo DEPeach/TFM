@@ -57,5 +57,4 @@ def mi(X,Y):
     id_non_zero=arg_XY[mask]
     
     MI = sum(np.multiply(p_XY[tuple(zip(*id_non_zero))],np.log(p_XY[tuple(zip(*id_non_zero))] / p_X_p_Y[tuple(zip(*id_non_zero))])))
-    #print(MI)    
     return MI
