@@ -126,22 +126,25 @@ str(norm_paths)
 ##############################
 
 #Anemia de Fanconi
-disgenet_AF<-read.delim("./Raw_Data/Disgenet_fanconi_anemia.tsv", header=TRUE, sep="\t",fill=TRUE)
-rownames(disgenet_AF)<- disgenet_AF$Gene
+#disgenet_AF<-read.delim("./Raw_Data/Disgenet_fanconi_anemia.tsv", header=TRUE, sep="\t",fill=TRUE)
+#rownames(disgenet_AF)<- disgenet_AF$Gene
 #Seleccionamos los casos que nos interesan, score >= 0.70
-disgenet_AF<-disgenet_AF[disgenet_AF$Score_gda>=0.50, c("Disease", "Gene", "Gene_id", "UniProt", "Score_gda")]
+#disgenet_AF<-disgenet_AF[disgenet_AF$Score_gda>=0.50, c("Disease", "Gene", "Gene_id", "UniProt", "Score_gda")]
 
 
 #Retinitis Pigmentosa
-disgenet_RP<-read.delim("./Raw_Data/Disgenet_retinitis_pigmentosa.tsv", header=TRUE, sep="\t",fill=TRUE)
-rownames(disgenet_RP)<- disgenet_RP$Gene
+#disgenet_RP<-read.delim("./Raw_Data/Disgenet_retinitis_pigmentosa.tsv", header=TRUE, sep="\t",fill=TRUE)
+#rownames(disgenet_RP)<- disgenet_RP$Gene
 #Seleccionamos los casos que nos interesan, score >= 0.70
-disgenet_RP<-disgenet_RP[disgenet_RP$Score_gda>=0.50, c("Disease", "Gene", "Gene_id", "UniProt", "Score_gda")]
+#disgenet_RP<-disgenet_RP[disgenet_RP$Score_gda>=0.50, c("Disease", "Gene", "Gene_id", "UniProt", "Score_gda")]
 
 
 #pht1_retinosois <- load_pathways(species = "hsa", pathways_list = c("hsa04960"))
 #pht1_anemia <- load_pathways(species = "hsa", pathways_list = c("hsa03460"))
 
+disgenet_AF<-read.delim("./Raw_Data/curated_gene_disease_associations.tsv", header=TRUE, sep="\t",fill=TRUE)
+disgenet_AF<-disgenet_AF[disgenet_AF$diseaseName == "Fanconi Anemia", c("geneId", "geneSymbol", "diseaseName", "score")]
+rownames(disgenet_AF)<- disgenet_AF$geneId
 
 
 #############################
@@ -173,7 +176,7 @@ colnames(subpathways) <- "hipathia"
 # which are unique by construction. Thus, we fix it
 rownames(subpathways) <- subpathways$hipathia
 
-# Table of all Hipathia pathways with orpha_genes
+# Table of all Hipathia pathways with genes
 cualpath_dis <- function(genes, pathway) {
   w <- intersect(genes, entrez.list[[pathway]])
   
@@ -185,23 +188,23 @@ cualpath_dis <- function(genes, pathway) {
 }
 
 paths_AF <- sapply(names(entrez.list), function(x) {
-  cualpath_dis(as.character(disgenet_AF$Gene_id), x)
+  cualpath_dis(as.character(disgenet_AF$geneId), x)
 })
 paths_AF <- names(entrez.list)[paths_AF]
 dis_circuits_AF <- subpathways.list[paths_AF]
 
 
-paths_RP <- sapply(names(entrez.list), function(x) {
-  cualpath_dis(as.character(disgenet_RP$Gene_id), x)
-})
-paths_RP <- names(entrez.list)[paths_RP]
-dis_circuits_RP <- subpathways.list[paths_RP]
+#paths_RP <- sapply(names(entrez.list), function(x) {
+#  cualpath_dis(as.character(disgenet_RP$Gene_id), x)
+#})
+#paths_RP <- names(entrez.list)[paths_RP]
+#dis_circuits_RP <- subpathways.list[paths_RP]
 
 
-## Get circuits with orpha_genes
+## Get circuits with genes
 
 cir_AF <- as.character(unlist(dis_circuits_AF))
-cir_RP <- as.character(unlist(dis_circuits_RP))
+#cir_RP <- as.character(unlist(dis_circuits_RP))
 
 
 ## Function to get the entrez of a given circuit ##
@@ -223,9 +226,9 @@ cir_AF_entrez <- sapply(cir_AF, function(x) {
   get_entrez_cir(x)
 })
 
-cir_RP_entrez <- sapply(cir_RP, function(x) {
-  get_entrez_cir(x)
-})
+#cir_RP_entrez <- sapply(cir_RP, function(x) {
+#  get_entrez_cir(x)
+#})
 
 
 ## Function to to extract the circuits where entrex_disease genes are located
@@ -240,7 +243,7 @@ which_cir <- function(entrez_disease, circuit) {
 }
 
 AF_cir <- lapply(cir_AF_entrez, function(x) {
-  which_cir(disgenet_AF$Gene_id, x)
+  which_cir(disgenet_AF$geneId, x)
 })
 AF_cir <- stack(AF_cir)
 
@@ -250,23 +253,23 @@ cir_AF <- data.frame(
 )
 
 
-RP_cir <- lapply(cir_RP_entrez, function(x) {
-  which_cir(disgenet_RP$Gene_id, x)
-})
-RP_cir <- stack(RP_cir)
+#RP_cir <- lapply(cir_RP_entrez, function(x) {
+#  which_cir(disgenet_RP$Gene_id, x)
+#})
+#RP_cir <- stack(RP_cir)
 
-cir_RP <- data.frame(
-  Circuit = get_path_names(pathways, names = as.character(RP_cir$ind[RP_cir$values == T])),
-  Hipathia_code = RP_cir$ind[RP_cir$values == T], stringsAsFactors = F
-)
+#cir_RP <- data.frame(
+#  Circuit = get_path_names(pathways, names = as.character(RP_cir$ind[RP_cir$values == T])),
+#  Hipathia_code = RP_cir$ind[RP_cir$values == T], stringsAsFactors = F
+#)
 
 
 #filtracion de los sub-paths normalizados de las dos enfermedades
 rnames_AF<-intersect(rownames(norm_paths),cir_AF$Hipathia_code)
 norm_paths_AF<-norm_paths[rnames_AF,]
 
-rnames_RP<-intersect(rownames(norm_paths),cir_RP$Hipathia_code)
-norm_paths_RP<-norm_paths[rnames_RP,]
+#rnames_RP<-intersect(rownames(norm_paths),cir_RP$Hipathia_code)
+#norm_paths_RP<-norm_paths[rnames_RP,]
 
 
 
@@ -338,8 +341,6 @@ write.xlsx(drugbank_app_action_genes, file =  file.path(tables_folder, "supp_tab
 
 alldrug_byaction <- drugbank_app_action_genes[,c("name", "actions", "entrez_id")]
 colnames(alldrug_byaction) <- c("drug", "drug_action", "KDT")  
-
-
 
 
 

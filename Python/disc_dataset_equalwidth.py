@@ -29,15 +29,23 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
+#import scipy.io 
+#mat = scipy.io.loadmat('/Users/macondo/Documents/GitHub/TFM/Raw_Data/atp1d.mat')
+
+#a=mat.items()
+#b=list(a)
+#X=np.array(b[3][1])
+#labels=np.array(b[4][1])
+
 
 def disc_dataset_equalwidth(X, bins):
-    
+   
     new_data = np.zeros_like(X)
     
     for fnum in range(X.shape[1]):
         
         if len(np.unique(X[:, fnum])) <= bins:
-            _, _, new_data[:, fnum] = np.unique(X[:, fnum], return_inverse=True)
+            _, new_data[:, fnum] = np.unique(X[:, fnum], return_inverse=True)
         else:
             feat = X[:, fnum]
             minval = np.min(feat)
@@ -53,8 +61,10 @@ def disc_dataset_equalwidth(X, bins):
             
             for n in range(bins):
                 indices = np.where((feat >= lastboundaryend) & (feat < boundaryend[n]))[0]
-                newfeature[indices] = n + 1
+                newfeature[indices] = n 
                 lastboundaryend = boundaryend[n]
 
-            _, _, new_data[:, fnum] = np.unique(newfeature, return_inverse=True)
+            _, new_data[:, fnum] = np.unique(newfeature, return_inverse=True)
+    
+    return new_data
  
