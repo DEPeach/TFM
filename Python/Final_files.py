@@ -23,13 +23,22 @@
 ##########################################################################################
 
 import pandas as pd
+import numpy as np
 from biothings_client import get_client
 
 
 #import data
+pathvals_gtex=pd.read_feather(path="/Users/macondo/Documents/GitHub/TFM/Raw_Data/pathvals_gtex-v8_edger-v3-40-0_hipathia-norm-v2-14-0.feather")
+gexp_gtex=pd.read_feather(path="/Users/macondo/Documents/GitHub/TFM/Raw_Data/gexp_gtex-v8_edger-v3-40-0.feather")
 
-
-
+circuits_AF=pd.read_feather(path="/Users/macondo/Documents/GitHub/TFM/Raw_Data/circuits_AF.feater")
+                                    
+hipathia_code = circuits_AF['Hipathia_code'].tolist()
+hipathia_code = list(map(lambda x: x.replace('-', '.'), hipathia_code)) 
+hipathia_code = list(map(lambda x: x.replace(' ', '.'), hipathia_code)) 
+    
+input=pathvals_gtex[hipathia_code] 
+    
 # definition of the function convert_gene_ids
 
 def convert_gene_ids(gene_ids, source="entrezgene", target="uniprot,symbol"):
