@@ -43,6 +43,7 @@ library(genefu)
 library(tidyverse)
 library(hipathia)
 library(dplyr)
+library(feather)
 
 
 
@@ -119,6 +120,8 @@ path_vals <- get_paths_data(results, matrix = TRUE)
 norm_paths<-normalize_paths(path_vals, pathways)
 str(norm_paths)
 
+pathvals_gtex <- feather("./Raw_Data/pathvals_gtex-v8_edger-v3-40-0_hipathia-norm-v2-14-0.feather")
+gexp_gtex <- feather("./Raw_Data/gexp_gtex-v8_edger-v3-40-0.feather")
 
 
 ###############################
@@ -252,6 +255,7 @@ cir_AF <- data.frame(
   Hipathia_code = AF_cir$ind[AF_cir$values == T], stringsAsFactors = F
 )
 
+write_feather(cir_AF, "./Raw_Data/circuits_AF.feater")
 
 #RP_cir <- lapply(cir_RP_entrez, function(x) {
 #  which_cir(disgenet_RP$Gene_id, x)
@@ -265,8 +269,8 @@ cir_AF <- data.frame(
 
 
 #filtracion de los sub-paths normalizados de las dos enfermedades
-rnames_AF<-intersect(rownames(norm_paths),cir_AF$Hipathia_code)
-norm_paths_AF<-norm_paths[rnames_AF,]
+#rnames_AF<-intersect(rownames(norm_paths),cir_AF$Hipathia_code)
+#norm_paths_AF<-norm_paths[rnames_AF,]
 
 #rnames_RP<-intersect(rownames(norm_paths),cir_RP$Hipathia_code)
 #norm_paths_RP<-norm_paths[rnames_RP,]
