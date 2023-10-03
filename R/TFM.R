@@ -11,13 +11,14 @@
 #Raw data: 
 #         - GTEx V8
 #         - DrugBank Version 5.1.10
+#         - Disgenet
 
 #Descripcion: 
 #           - Normalizacion de los perfiles de GTEx utilizando egdeR
 #           - Calculo de los perfiles de actividad de señalización utilizando Hipathia
 #           - Filtracion de los targets de drogas conocidos de la base de datos de DRUGBANK 
 #             (Known Drug Targets, KDTs)
-
+#           - Elaboracion de mapa de la enfermedad de anemia de fanconi
 ##########################################################################################
 
 ############################
@@ -44,6 +45,7 @@ library(tidyverse)
 library(hipathia)
 library(dplyr)
 library(feather)
+library(readr)
 
 
 
@@ -85,9 +87,7 @@ y_norm<-calcNormFactors(y, method = "TMM")
 y_norm1 <- cpm(y_norm, log=T)
 #dim(y_norm1)
 
-y_norm1<- y_norm1[1:100,1:200]
-
-
+#y_norm1<- y_norm1[1:100,1:200]
 
 
 
@@ -103,10 +103,6 @@ trans_data <- translate_data(y_norm1, "hsa")
 #la matriz de datos de expresión debe escalarse entre 0 y 1 antes de calcular los valores de activación de las sub-rutas
 exp_data <- normalize_data(trans_data)
 
-#boxplot(trans_data)
-#boxplot(exp_data)
-
-
 #carga 146 rutas
 pathways <- hipathia::load_pathways("hsa")
 
@@ -120,8 +116,6 @@ path_vals <- get_paths_data(results, matrix = TRUE)
 norm_paths<-normalize_paths(path_vals, pathways)
 str(norm_paths)
 
-pathvals_gtex <- feather("./Raw_Data/pathvals_gtex-v8_edger-v3-40-0_hipathia-norm-v2-14-0.feather")
-gexp_gtex <- feather("./Raw_Data/gexp_gtex-v8_edger-v3-40-0.feather")
 
 
 ###############################
@@ -145,14 +139,16 @@ gexp_gtex <- feather("./Raw_Data/gexp_gtex-v8_edger-v3-40-0.feather")
 #pht1_retinosois <- load_pathways(species = "hsa", pathways_list = c("hsa04960"))
 #pht1_anemia <- load_pathways(species = "hsa", pathways_list = c("hsa03460"))
 
+
+#Anemia de Fanconi
 disgenet_AF<-read.delim("./Raw_Data/curated_gene_disease_associations.tsv", header=TRUE, sep="\t",fill=TRUE)
 disgenet_AF<-disgenet_AF[disgenet_AF$diseaseName == "Fanconi Anemia", c("geneId", "geneSymbol", "diseaseName", "score")]
 rownames(disgenet_AF)<- disgenet_AF$geneId
 
 
-#############################
-# Rutas de las enfermedades #
-#############################
+#########################
+# Mapa de la enfermedad #
+#########################
 
 # codigo tomado de github (https://github.com/babelomics/drexml-retinitis/blob/main/scripts/r/03_genes_circuits_ML.R)
 
@@ -255,6 +251,9 @@ cir_AF <- data.frame(
   Hipathia_code = AF_cir$ind[AF_cir$values == T], stringsAsFactors = F
 )
 
+cir_AF$Hipathia_code <- gsub('-','.',cir_AF$Hipathia_code)
+cir_AF$Hipathia_code <- gsub(' ','.',cir_AF$Hipathia_code)
+
 write_feather(cir_AF, "./Raw_Data/circuits_AF.feater")
 
 #RP_cir <- lapply(cir_RP_entrez, function(x) {
@@ -266,14 +265,6 @@ write_feather(cir_AF, "./Raw_Data/circuits_AF.feater")
 #  Circuit = get_path_names(pathways, names = as.character(RP_cir$ind[RP_cir$values == T])),
 #  Hipathia_code = RP_cir$ind[RP_cir$values == T], stringsAsFactors = F
 #)
-
-
-#filtracion de los sub-paths normalizados de las dos enfermedades
-#rnames_AF<-intersect(rownames(norm_paths),cir_AF$Hipathia_code)
-#norm_paths_AF<-norm_paths[rnames_AF,]
-
-#rnames_RP<-intersect(rownames(norm_paths),cir_RP$Hipathia_code)
-#norm_paths_RP<-norm_paths[rnames_RP,]
 
 
 
@@ -327,24 +318,45 @@ drugbank_all2 <- drugbank_all[-(base::grep("withdrawn",drugbank_all$group)),] %>
 dim(drugbank_all2) ## 2992  KDT-drug 
 length(unique(drugbank_all2$uniprot_id)) ## 744 Uniprot IDs  
 
+write_tsv(drugbank_all2, "./Raw_Data/Drugbank_KDTs.tsv")
 
 
-## Load genes stable translator used to Unipro IDs
-entrez_uniprot <- read.delim(file = file.path(data_folder2, "genes_drugbank-v050108_mygene-20230120.tsv")) %>% .[.$uniprot_id %in% drugbank_app_action$uniprot_id , ]
+## Convetir uniprot_id -> entrez_id
+entrez_uniprot <- read.delim("./Raw_Data/Drugbank_KDTs_mygene.tsv") %>% .[.$uniprot_id %in% drugbank_all2$uniprot_id , ]
 dim(entrez_uniprot)
 
-drugbank_app_action <- merge(drugbank_app_action, entrez_uniprot,) %>% .[-which(is.na(.$entrez_id)),] 
-length(unique(drugbank_app_action$entrez_id)) 
+drugbank_all2 <- merge(drugbank_all2, entrez_uniprot,) %>% .[-which(is.na(.$entrez_id)),] 
+length(unique(drugbank_all2$entrez_id)) 
 
-saveRDS(drugbank_app_action, file.path(rds_folder, "drugbank_app_action_entrez.rds"))
 
-drugbank_app_action_genes <- merge(drugbank_app_action, genes_tr, by.x = "entrez_id", by.y = "entrez" ) ## Add the symbol column from the stable translate table
-length(unique(drugbank_app_action_genes$entrez_id)) ## We have all included KDTs 711
+## Convetir entrez_id -> symbol
+genes_tr <- read.delim("./Raw_Data/gexp_gtex-v8_edger-v3-40-0_mygene.tsv")
+drugbank_all3 <- merge(drugbank_all2, genes_tr, by= "entrez_id", all.x = TRUE) 
+length(unique(drugbank_all3$entrez_id)) ## KDTs 733
 
-write.xlsx(drugbank_app_action_genes, file =  file.path(tables_folder, "supp_tabl3_drugbank518_filtered.xlsx"))
+drugbank_all3$entrez_id1 <- paste("X", drugbank_all3$entrez_id, sep="") 
 
-alldrug_byaction <- drugbank_app_action_genes[,c("name", "actions", "entrez_id")]
-colnames(alldrug_byaction) <- c("drug", "drug_action", "KDT")  
+
+
+##########################
+# Final Files for Python #
+##########################
+
+#X: Input matrix: Samples x KDTs (gen expresion)
+gexp_gtex <- read_feather("./Raw_Data/gexp_gtex-v8_edger-v3-40-0.feather")
+
+
+
+#Labels: Output matrix: Samples x hipathia sub-paths
+pathvals_gtex <- read_feather("./Raw_Data/pathvals_gtex-v8_edger-v3-40-0_hipathia-norm-v2-14-0.feather")
+#rownames(pathvals_gtex)<-pathvals_gtex$index
+snames <- cir_AF[,"Hipathia_code"]
+labels <- pathvals_gtex[,snames]
+
+write_feather(labels, "./Raw_Data/labels.feater")
+
+
+
 
 
 
