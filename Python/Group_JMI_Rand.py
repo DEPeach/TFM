@@ -10,8 +10,8 @@
 #en modelos de aprendizaje máquina multi-respuesta para el reposicionamiento de fármacos.
 
 # Inputs:
-#           - Datos_X: matriz n x d X, con valores categóricos para n ejemplos y d características.
-#           - Y_labels: matriz n x q con las etiquetas
+#           - Datos_X: matriz con valores categóricos para n ejemplos y d características.
+#           - Y_labels: matriz con las etiquetas
 #           - topK: número de características a seleccionar
 #           - distancia: la medida de distancia que se utilizará para agrupar el espacio de salida
 
@@ -23,7 +23,6 @@
 #Fuente: 
 #        - https://www.mdpi.com/1099-4300/21/9/855
 #        - https://github.com/sechidis/2019-Entropy-Multi-target-feature-selection/blob/master/Group_JMI_Rand.m
-
 ##########################################################################################
 
 
@@ -35,11 +34,11 @@ import random
 import sklearn 
 from sklearn_extra.cluster import KMedoids
 from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics import pairwise_distances
 from scipy.stats import entropy
 import Mi
 
-#def Group_JMI_Rand(X_data,Y_labels, topK, distance):
-def Group_JMI_Rand(X_data,Y_labels, topK):
+def Group_JMI_Rand(X_data,Y_labels, topK, distance):
     
     num_features = X_data.shape[1]
     num_labels = Y_labels.shape[1]
@@ -53,7 +52,7 @@ def Group_JMI_Rand(X_data,Y_labels, topK):
         #random_sample=random.sample([x for x in range(0, num_labels, 1)],random1)
         random_sample = Y_labels[:, random1]
         #Y_labels_new = KMedoids(n_clusters=random2, random_state=0, method="pam").fit(np.array([row[random_sample] for row in Y_labels]))
-        kmedoids = KMedoids(n_clusters=random2, random_state=None, metric='euclidean').fit(random_sample)
+        kmedoids = KMedoids(n_clusters=random2, random_state=None, metric=distance).fit(random_sample)
         Y_labels_new[:, index_label] = kmedoids.labels_
         
     score_per_feature = np.zeros((1,num_features),dtype=float)

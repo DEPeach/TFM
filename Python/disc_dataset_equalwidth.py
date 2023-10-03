@@ -21,7 +21,6 @@
 #Fuente: 
 #        - https://www.mdpi.com/1099-4300/21/9/855
 #        - https://github.com/sechidis/2019-Entropy-Multi-target-feature-selection/blob/master/disc_dataset_equalwidth.m 
-
 ##########################################################################################
 
 
@@ -29,18 +28,10 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
-#import scipy.io 
-#mat = scipy.io.loadmat('/Users/macondo/Documents/GitHub/TFM/Raw_Data/atp1d.mat')
-
-#a=mat.items()
-#b=list(a)
-#X=np.array(b[3][1])
-#labels=np.array(b[4][1])
-
 
 def disc_dataset_equalwidth(X, bins):
    
-    new_data = np.zeros_like(X)
+    new_data = np.zeros_like(X, dtype=float)
     
     for fnum in range(X.shape[1]):
         
